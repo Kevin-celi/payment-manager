@@ -1,0 +1,178 @@
+package ec.edu.uce.managerpay;
+
+import Producto.*;
+import Persona.*;
+import EntidadBancaria.*;
+import Tarjeta.*;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
+import jakarta.ws.rs.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+
+
+@Path("/hello-world")
+public class HelloResource {
+
+    private List<Automovil> autosCrear;
+    @Inject
+    private Usuario usuarios;
+
+    @PostConstruct
+    public void init() {
+        autosCrear = new ArrayList<>();
+       /* autosCrear.add(new Automovil(1,"Chevrolet", "Spark", "compacto", "blanco",20000));
+        autosCrear.add(new Automovil(2,"Chevrolet", "Camaro",  "deportivo", "amarillo",20000));
+        autosCrear.add(new Automovil(3,"Chevrolet", "Traverse",  "SUV", "negro",20000));
+
+        autosCrear.add(new Automovil(4,"Hyundai", "Elantra", "sedán", "azul",20000));
+        autosCrear.add(new Automovil(5,"Hyundai", "Tucson",  "SUV", "gris",20000));
+        autosCrear.add(new Automovil(6,"Hyundai", "Veloster",  "deportivo", "rojo",20000));
+
+        autosCrear.add(new Automovil(7,"Nissan", "Sentra",  "sedán", "plateado",20000));
+        autosCrear.add(new Automovil(8,"Nissan", "GT-R", "deportivo", "negro",20000));
+        autosCrear.add(new Automovil(9,"Nissan", "X-Trail", "SUV", "verde",20000));*/
+    }
+
+
+    @GET
+    @Produces("text/plain")
+    @Path("/Crear-Autos")
+    public String crearAutos() {
+        // Configurar EntityManager
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("gestor_pagos");
+        EntityManager em = emf.createEntityManager();
+        try {
+            // Crear un servicio para manejar las entidades
+            servicioAutomovil servicioAuto = new servicioAutomovil(em);
+            // Persistir cada Automovil
+            for (Automovil automovil : autosCrear) {
+                servicioAuto.crearAuto(automovil);
+            }
+            return "La transacción JPA fue exitosa. lista de automoviles creados.";
+        }catch (Exception e){
+            return "Ocurrió un error: " + e.getMessage();
+        }
+    }
+
+    @GET
+    @Produces("text/json")
+    @Path("/lista-autos")
+    public List<Automovil> getAllStudents() {
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("gestor_pagos");
+        EntityManager em = emf.createEntityManager();
+        // Crear un servicio para manejar las entidades
+        servicioAutomovil servicioAuto = new servicioAutomovil(em);
+        return servicioAuto.getAutomovil();
+    }
+
+    @GET
+    @Produces("text/json")
+    @Path("/lista-usuarios")
+    public String crearUsuario(){
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("gestor_pagos");
+        EntityManager em = emf.createEntityManager();
+         servicioUsuario servicioUsuario = new servicioUsuario(em);
+      /*  servicioUsuario.crearUsuario(new Usuario("kevin","celi","chillogallo","0968685229","usuario1@gmail.com",null));
+        servicioUsuario.crearUsuario(new Usuario("julian","arcos","forestal","0968685672","usuario2@gmail.com",null));
+        servicioUsuario.crearUsuario(new Usuario("Ana","Andrade","Cumbaya","0965856722","usuario3@gmail.com",null));*/
+        return "Usuarios Creados ¡Exitosamente";
+    }
+
+    @GET
+    @Path("/ID-usuario/{usuarioID}/ID-auto/{autoID}")
+    public String adquirirAuto(@PathParam("usuarioID") int usuarioID, @PathParam("autoID") int autoID) {
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("gestor_pagos");
+        EntityManager em = emf.createEntityManager();
+
+        servicioUsuario servicioUsuario = new servicioUsuario(em);
+        servicioAutomovil servicioAutomovil = new servicioAutomovil(em);
+
+        Usuario usuarioUno = servicioUsuario.leertUsuario(usuarioID);
+        usuarioUno.setAutomovil(servicioAutomovil.traerAutomovilesPorId(autoID));
+        servicioUsuario.actualizarUsuario(usuarioUno);
+
+        return "El usuario identificado es: " + usuarioUno.getNombre() + " " + usuarioUno.getApellido() +
+                " y ha adquirido el auto : " + servicioAutomovil.traerAutomovil(autoID);
+    }
+
+    @GET
+    @Produces("text/plain")
+    @Path("/Crear-CuentaBancaria")
+    public String crearCuentaBancarias() {
+        // Configurar EntityManager
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("gestor_pagos");
+        EntityManager em = emf.createEntityManager();
+        try {
+            // Crear un servicio para manejar las entidades
+            serviciosBancos serviciosBancos = new serviciosBancos(em);
+            servicioUsuario servicioUsuario = new servicioUsuario(em);
+            // Persistir cada Cuenta Bancaria
+            serviciosBancos.CrearBanco(new cuentaBancaria("Pichincha", "1435623456", 500000, "Ahorros", servicioUsuario.leertUsuario(202)));
+           // serviciosBancos.CrearBanco(new cuentaBancaria("Pichincha", "1135623555", 600000, "Ahorros", servicioUsuario.leertUsuario(203)));
+           // serviciosBancos.CrearBanco(new cuentaBancaria("Pichincha", "1735647396", 7600000, "Ahorros", servicioUsuario.leertUsuario(204)));
+            return "La transacción JPA fue exitosa. lista de cuentas creadas.";
+        } catch (Exception e) {
+            return "Ocurrió un error: " + e.getMessage();
+        }
+    }
+
+    @GET
+    @Produces("text/json")
+    @Path("/leerUsuario")
+    public Usuario leerUsuario() {
+        // Configurar EntityManager
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("gestor_pagos");
+        EntityManager em = emf.createEntityManager();
+
+        servicioUsuario servicioUsuario = new servicioUsuario(em);
+        return servicioUsuario.leertUsuario(202);
+    }
+
+
+
+
+
+
+    /*@GET
+    @Path("/ID-usuario")
+    public String adquirirAutoUno() {
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("gestor_pagos");
+        EntityManager em = emf.createEntityManager();
+        servicioUsuario servicioUsuario = new servicioUsuario(em);
+        Usuario usuarioUno = servicioUsuario.getUsuario(102);
+        usuarioUno.setApellido("Diaz");
+        servicioUsuario.actualizarUsuario(usuarioUno);
+        return "nombre cambiado con exito";
+    }*/
+
+
+
+
+
+
+
+
+
+
+   /* @GET
+    @Produces("text/json")
+    @Path("/Autos")
+    public String mostrarAutos(){
+        return autosCrear.toString();
+    }
+
+    @GET
+    @Produces("text/json")
+    @Path("/autosUno")
+    public List<Automovil> mostrarAutosUno(){
+        return autosCrear;
+    }*/
+    }
+
